@@ -11,46 +11,69 @@
         body, html { margin: 0; padding: 0; height: 100%; font-family: -apple-system, sans-serif; background: var(--dark-bg); color: var(--text); overflow: hidden; }
         
         #login-screen { display: flex; align-items: center; justify-content: center; height: 100%; }
-        .login-card { background: var(--card-bg); padding: 30px; border-radius: 20px; text-align: center; width: 300px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+        .login-card { background: var(--card-bg); padding: 30px; border-radius: 20px; text-align: center; width: 300px; }
         .login-card input { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #333; background: #2a2d31; color: white; margin-bottom: 15px; box-sizing: border-box; outline: none; }
         .login-card button { width: 100%; padding: 12px; border-radius: 10px; border: none; background: var(--primary); color: white; font-weight: bold; cursor: pointer; }
 
         #chat-screen { display: none; flex-direction: column; height: 100vh; position: relative; }
         header { background: var(--card-bg); padding: 15px; text-align: center; font-weight: bold; font-size: 18px; border-bottom: 1px solid #333; }
         
-        #messages { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 12px; padding-bottom: 120px; scroll-behavior: smooth; }
-        .msg-row { display: flex; align-items: flex-end; gap: 8px; }
+        #messages { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 12px; padding-bottom: 150px; scroll-behavior: smooth; }
+        .msg-row { display: flex; align-items: flex-end; gap: 8px; position: relative; }
         .my-msg { flex-direction: row-reverse; }
-        .avatar { width: 35px; height: 35px; border-radius: 50%; font-size: 12px; display: flex; align-items: center; justify-content: center; font-weight: bold; color: white; }
+        .avatar { width: 30px; height: 30px; border-radius: 50%; font-size: 10px; display: flex; align-items: center; justify-content: center; font-weight: bold; color: white; flex-shrink: 0; }
         
-        .bubble { padding: 10px 14px; border-radius: 18px; font-size: 15px; max-width: 75%; cursor: pointer; position: relative; word-wrap: break-word; }
+        .bubble { padding: 10px 14px; border-radius: 18px; font-size: 15px; max-width: 75%; position: relative; word-wrap: break-word; cursor: pointer; }
         .my-msg .bubble { background: var(--primary); color: white; border-bottom-right-radius: 4px; }
         .other-msg .bubble { background: #303338; color: white; border-bottom-left-radius: 4px; }
-        
-        .msg-info { font-size: 9px; opacity: 0.6; margin-top: 4px; text-align: right; }
-        .read-status { width: 7px; height: 7px; background: #4CAF50; border-radius: 50%; display: inline-block; margin-left: 3px; }
 
-        .input-area-container { position: fixed; bottom: 0; left: 0; right: 0; background: var(--card-bg); z-index: 2000; border-top: 1px solid #333; padding-bottom: env(safe-area-inset-bottom); }
+        /* Reply Styling */
+        .reply-preview-in-msg { background: rgba(0,0,0,0.2); padding: 5px 8px; border-left: 3px solid #fff; border-radius: 4px; margin-bottom: 5px; font-size: 12px; opacity: 0.8; }
+        .reply-bar { background: var(--card-bg); padding: 8px 15px; display: none; border-top: 1px solid #333; justify-content: space-between; align-items: center; }
+
+        /* Reactions Box */
+        .reaction-box { display: none; position: absolute; top: -45px; background: #2a2d31; border-radius: 20px; padding: 5px 10px; gap: 8px; z-index: 3000; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
+        .reaction-box span { cursor: pointer; font-size: 20px; transition: 0.1s; }
+        .reaction-box span:hover { transform: scale(1.3); }
+        .msg-reactions { font-size: 13px; margin-top: 2px; }
+
+        .input-area-container { position: fixed; bottom: 0; left: 0; right: 0; background: var(--card-bg); z-index: 2000; border-top: 1px solid #333; }
         .typing { font-size: 11px; color: #888; padding: 5px 15px; font-style: italic; min-height: 15px; }
         .input-bar { display: flex; align-items: center; gap: 10px; padding: 10px; }
         
         #msgInp { flex: 1; border: none; background: #2a2d31; padding: 12px 15px; border-radius: 20px; outline: none; color: white; font-size: 16px; }
         #send-btn { background: var(--primary); color: white; border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+
+        /* Context Menu */
+        #context-menu { display: none; position: fixed; background: #2a2d31; border-radius: 10px; padding: 5px 0; z-index: 4000; box-shadow: 0 0 20px rgba(0,0,0,0.8); }
+        .menu-item { padding: 10px 20px; color: white; cursor: pointer; font-size: 14px; }
+        .menu-item:hover { background: #3a3d42; }
+        .delete-item { color: #ff4444; border-top: 1px solid #444; }
     </style>
 </head>
 <body>
     <div id="login-screen">
         <div class="login-card">
-            <h2>Մուտք</h2>
+            <h2>Noro ❤️ Gayush</h2>
             <input type="text" id="nameInput" placeholder="Անունդ..." autocomplete="off">
-            <button onclick="enter()">Մտնել Չատ</button>
+            <button onclick="enter()">Մտնել</button>
         </div>
     </div>
 
     <div id="chat-screen">
         <header>Noro ❤️ Gayush</header>
         <div id="messages"></div>
+        
+        <div id="context-menu">
+            <div class="menu-item" id="reply-action">Reply (Պատասխանել)</div>
+            <div class="menu-item delete-item" id="delete-action">Delete (Ջնջել)</div>
+        </div>
+
         <div class="input-area-container">
+            <div id="reply-bar" class="reply-bar">
+                <div id="reply-info" style="font-size:12px; color:#aaa;"></div>
+                <div onclick="cancelReply()" style="cursor:pointer; color:red; font-weight:bold;">✕</div>
+            </div>
             <div id="typing-box" class="typing"></div>
             <div class="input-bar">
                 <label style="cursor:pointer; font-size:22px;">📷<input type="file" id="imgInp" hidden accept="image/*" onchange="sendImg(this)"></label>
@@ -74,7 +97,8 @@
         const db = firebase.database();
         const room = "private_room_2026";
         let user = "";
-        let tOut;
+        let replyData = null;
+        let pressTimer;
 
         function enter() {
             user = document.getElementById('nameInput').value.trim();
@@ -84,18 +108,12 @@
             init();
         }
 
-        document.getElementById('msgInp').addEventListener('input', () => {
-            db.ref('typing/'+room).set({u:user, s:true});
-            clearTimeout(tOut);
-            tOut = setTimeout(() => db.ref('typing/'+room).set({s:false}), 2000);
-        });
-
-        document.getElementById('msgInp').addEventListener('keypress', (e) => { if(e.key === 'Enter') send(); });
-
+        // --- Core Functions ---
         function send() {
             const val = document.getElementById('msgInp').value.trim();
             if(!val) return;
-            pushMsg({t:'text', c:val});
+            pushMsg({t:'text', c:val, r: replyData});
+            cancelReply();
             document.getElementById('msgInp').value = "";
         }
 
@@ -103,38 +121,39 @@
             const f = inp.files[0];
             if(!f) return;
             const r = new FileReader();
-            r.onload = (e) => pushMsg({t:'image', c:e.target.result});
+            r.onload = (e) => pushMsg({t:'image', c:e.target.result, r: replyData});
             r.readAsDataURL(f);
+            cancelReply();
         }
 
         function pushMsg(data) {
             const now = new Date();
             const time = now.getHours() + ":" + (now.getMinutes()<10?'0':'') + now.getMinutes();
-            db.ref('chats/'+room).push({ u: user, type: data.t, content: data.c, read: false, time: time });
+            db.ref('chats/'+room).push({ u: user, type: data.t, content: data.c, reply: data.r, time: time, reactions: {} });
         }
 
-        function deleteMsg(id, msgUser) {
-            if(msgUser === user && confirm("Ջնջե՞լ այս նամակը բոլորի մոտ։")) {
-                db.ref('chats/'+room+'/'+id).remove();
-            }
+        function cancelReply() {
+            replyData = null;
+            document.getElementById('reply-bar').style.display = 'none';
         }
 
+        // --- Init & Render ---
         function init() {
             db.ref('chats/'+room).on('child_added', (snap) => {
                 const d = snap.val();
-                if(d.u !== user && !d.read) db.ref('chats/'+room+'/'+snap.key).update({read:true});
+                if(d.u !== user) db.ref('chats/'+room+'/'+snap.key).update({read:true});
                 render(snap.key, d);
             });
-            db.ref('chats/'+room).on('child_removed', (snap) => {
-                const el = document.querySelector(`[data-id="${snap.key}"]`);
-                if(el) el.remove();
-            });
-            db.ref('chats/'+room).on('child_changed', (snap) => {
+            db.ref('chats/'+room).on('child_removed', snap => document.querySelector(`[data-id="${snap.key}"]`)?.remove());
+            db.ref('chats/'+room).on('child_changed', snap => {
                 const d = snap.val();
-                const el = document.querySelector(`[data-id="${snap.key}"] .read-area`);
-                if(el && d.read && d.u === user) el.innerHTML = '<span class="read-status"></span>';
+                const el = document.querySelector(`[data-id="${snap.key}"]`);
+                if(el) {
+                    const reactDiv = el.querySelector('.msg-reactions');
+                    reactDiv.innerText = Object.values(d.reactions || {}).join(' ');
+                }
             });
-            db.ref('typing/'+room).on('value', (s) => {
+            db.ref('typing/'+room).on('value', s => {
                 const d = s.val();
                 document.getElementById('typing-box').innerText = (d && d.s && d.u !== user) ? d.u + " գրում է..." : "";
             });
@@ -142,27 +161,80 @@
 
         function render(id, d) {
             const isMe = d.u === user;
-            const color = isMe ? "#0084ff" : "#555";
+            let replyHTML = d.reply ? `<div class="reply-preview-in-msg"><b>${d.reply.u}:</b> ${d.reply.c.substring(0,15)}...</div>` : "";
+            
             const html = `
-                <div class="msg-row ${isMe?'my-msg':'other-msg'}" data-id="${id}">
-                    <div class="avatar" style="background:${color}">${d.u[0]}</div>
-                    <div class="bubble" onclick="deleteMsg('${id}', '${d.u}')">
-                        <div style="font-size:10px; font-weight:bold; margin-bottom:3px; color:#aaa;">${d.u}</div>
-                        ${d.type==='text' ? `<div>${d.content}</div>` : `<img src="${d.content}" style="max-width:100%; border-radius:10px; margin-top:5px;">`}
-                        <div class="msg-info">
-                            ${d.time} <span class="read-area">${isMe && d.read ? '<span class="read-status"></span>' : ''}</span>
-                        </div>
+                <div class="msg-row ${isMe?'my-msg':'other-msg'}" data-id="${id}" 
+                     ontouchstart="startPress(event, '${id}', '${d.u}', '${d.content}')" 
+                     ontouchend="endPress()" 
+                     oncontextmenu="showMenu(event, '${id}', '${d.u}', '${d.content}')">
+                    <div class="reaction-box">
+                        <span onclick="react('${id}', '❤️')">❤️</span>
+                        <span onclick="react('${id}', '😂')">😂</span>
+                        <span onclick="react('${id}', '💋')">💋</span>
+                        <span onclick="react('${id}', '🫂')">🫂</span>
+                        <span onclick="react('${id}', '👍')">👍</span>
+                    </div>
+                    <div class="avatar" style="background:${isMe?'#0084ff':'#555'}">${d.u[0]}</div>
+                    <div class="bubble">
+                        ${replyHTML}
+                        ${d.type==='text' ? `<div>${d.content}</div>` : `<img src="${d.content}" style="max-width:100%; border-radius:10px;">`}
+                        <div style="font-size:9px; opacity:0.5; margin-top:4px;">${d.time}</div>
+                        <div class="msg-reactions">${Object.values(d.reactions || {}).join(' ')}</div>
                     </div>
                 </div>`;
             const m = document.getElementById('messages');
             m.insertAdjacentHTML('beforeend', html);
-            
-            // Ավտոմատ scroll դեպի ամենաներքևի նամակը
-            const lastMsg = m.lastElementChild;
-            if(lastMsg) {
-                lastMsg.scrollIntoView({ behavior: 'smooth', block: 'end' });
-            }
+            m.lastElementChild.scrollIntoView({ behavior: 'smooth', block: 'end' });
         }
+
+        // --- Interaction Logic ---
+        function react(id, emoji) {
+            db.ref(`chats/${room}/${id}/reactions/${user}`).set(emoji);
+            closeAll();
+        }
+
+        function showMenu(e, id, msgUser, content) {
+            e.preventDefault();
+            const menu = document.getElementById('context-menu');
+            menu.style.display = 'block';
+            menu.style.left = (e.pageX || e.touches[0].pageX) + 'px';
+            menu.style.top = (e.pageY || e.touches[0].pageY) + 'px';
+
+            document.getElementById('reply-action').onclick = () => {
+                replyData = {u: msgUser, c: content};
+                document.getElementById('reply-bar').style.display = 'flex';
+                document.getElementById('reply-info').innerText = `Պատասխան ${msgUser}-ին`;
+                closeAll();
+                document.getElementById('msgInp').focus();
+            };
+
+            const delBtn = document.getElementById('delete-action');
+            if(msgUser === user) {
+                delBtn.style.display = 'block';
+                delBtn.onclick = () => { if(confirm("Ջնջե՞լ բոլորի մոտ")) db.ref(`chats/${room}/${id}`).remove(); closeAll(); };
+            } else { delBtn.style.display = 'none'; }
+        }
+
+        function startPress(e, id, u, c) {
+            pressTimer = setTimeout(() => {
+                document.querySelector(`[data-id="${id}"] .reaction-box`).style.display = 'flex';
+                showMenu(e, id, u, c);
+            }, 600);
+        }
+        function endPress() { clearTimeout(pressTimer); }
+        function closeAll() {
+            document.querySelectorAll('.reaction-box').forEach(b => b.style.display = 'none');
+            document.getElementById('context-menu').style.display = 'none';
+        }
+
+        window.onclick = () => closeAll();
+        document.getElementById('msgInp').addEventListener('input', () => {
+            db.ref('typing/'+room).set({u:user, s:true});
+            clearTimeout(tOut);
+            tOut = setTimeout(() => db.ref('typing/'+room).set({s:false}), 2000);
+        });
+        document.getElementById('msgInp').addEventListener('keypress', (e) => { if(e.key === 'Enter') send(); });
     </script>
 </body>
 </html>
