@@ -9,34 +9,45 @@
     <style>
         :root { --primary: #0084ff; --dark-bg: #0b0d0f; --card-bg: #1a1d21; --text: #e4e6eb; }
         body, html { margin: 0; padding: 0; height: 100%; font-family: -apple-system, sans-serif; background: var(--dark-bg); color: var(--text); overflow: hidden; }
+        
         #login-screen { display: flex; align-items: center; justify-content: center; height: 100%; }
         .login-card { background: var(--card-bg); padding: 30px; border-radius: 20px; text-align: center; width: 300px; }
         .login-card input { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #333; background: #2a2d31; color: white; margin-bottom: 15px; box-sizing: border-box; outline: none; }
         .login-card button { width: 100%; padding: 12px; border-radius: 10px; border: none; background: var(--primary); color: white; font-weight: bold; cursor: pointer; }
+
         #chat-screen { display: none; flex-direction: column; height: 100vh; position: relative; }
-        header { background: var(--card-bg); padding: 15px; text-align: center; font-weight: bold; border-bottom: 1px solid #333; }
-        #messages { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 12px; padding-bottom: 150px; scroll-behavior: smooth; }
+        header { background: var(--card-bg); padding: 15px; text-align: center; font-weight: bold; border-bottom: 1px solid #333; z-index: 100; }
+        
+        #messages { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 12px; padding-bottom: 160px; scroll-behavior: smooth; }
         .msg-row { display: flex; align-items: flex-end; gap: 8px; position: relative; }
         .my-msg { flex-direction: row-reverse; }
         .avatar { width: 30px; height: 30px; border-radius: 50%; font-size: 10px; display: flex; align-items: center; justify-content: center; font-weight: bold; color: white; flex-shrink: 0; }
+        
         .bubble { padding: 10px 14px; border-radius: 18px; font-size: 15px; max-width: 75%; position: relative; word-wrap: break-word; user-select: none; -webkit-user-select: none; }
         .my-msg .bubble { background: var(--primary); color: white; border-bottom-right-radius: 4px; }
         .other-msg .bubble { background: #303338; color: white; border-bottom-left-radius: 4px; }
+
         .reply-preview-in-msg { background: rgba(0,0,0,0.2); padding: 5px 8px; border-left: 3px solid #fff; border-radius: 4px; margin-bottom: 5px; font-size: 12px; opacity: 0.8; }
         .reply-bar { background: var(--card-bg); padding: 8px 15px; display: none; border-top: 1px solid #333; justify-content: space-between; align-items: center; }
-        .reaction-box { display: none; position: absolute; top: -50px; background: #2a2d31; border-radius: 25px; padding: 5px 12px; gap: 10px; z-index: 3500; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
-        .reaction-box span { cursor: pointer; font-size: 22px; transition: transform 0.1s; display: inline-block; }
+
+        .reaction-box { display: none; position: absolute; top: -55px; background: #2a2d31; border-radius: 25px; padding: 5px 12px; gap: 10px; z-index: 5000; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
+        .reaction-box span { cursor: pointer; font-size: 22px; transition: transform 0.1s; }
         .reaction-box span:active { transform: scale(1.5); }
-        .msg-reactions { font-size: 14px; margin-top: 4px; background: rgba(255,255,255,0.1); border-radius: 10px; padding: 2px 6px; width: fit-content; }
+        
+        .msg-reactions { font-size: 14px; margin-top: 4px; background: rgba(255,255,255,0.1); border-radius: 10px; padding: 2px 6px; width: fit-content; display: none; }
         .read-status { width: 7px; height: 7px; background: #4CAF50; border-radius: 50%; display: inline-block; margin-left: 4px; }
-        .input-area-container { position: fixed; bottom: 0; left: 0; right: 0; background: var(--card-bg); z-index: 2000; border-top: 1px solid #333; }
+
+        .input-area-container { position: fixed; bottom: 0; left: 0; right: 0; background: var(--card-bg); z-index: 2000; border-top: 1px solid #333; padding-bottom: env(safe-area-inset-bottom); }
         .typing { font-size: 11px; color: #888; padding: 5px 15px; min-height: 15px; }
         .input-bar { display: flex; align-items: center; gap: 10px; padding: 10px; }
+        
         #msgInp { flex: 1; border: none; background: #2a2d31; padding: 12px 15px; border-radius: 20px; outline: none; color: white; font-size: 16px; }
-        #send-btn { background: var(--primary); color: white; border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; font-size: 18px; }
-        #context-menu { display: none; position: fixed; background: #2a2d31; border-radius: 10px; padding: 5px 0; z-index: 4000; box-shadow: 0 0 20px rgba(0,0,0,0.8); min-width: 140px; }
+        .icon-btn { background: none; border: none; font-size: 22px; cursor: pointer; padding: 5px; color: var(--text); }
+        #send-btn { background: var(--primary); color: white; border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+
+        #context-menu { display: none; position: fixed; background: #2a2d31; border-radius: 10px; padding: 5px 0; z-index: 4000; box-shadow: 0 0 20px rgba(0,0,0,0.8); min-width: 150px; }
         .menu-item { padding: 12px 20px; color: white; cursor: pointer; font-size: 14px; }
-        .delete-item { color: #ff4444; border-top: 1px solid #444; }
+        .menu-item:active { background: #3a3d42; }
     </style>
 </head>
 <body>
@@ -47,26 +58,29 @@
             <button onclick="enter()">Մտնել</button>
         </div>
     </div>
+
     <div id="chat-screen">
         <header> ❤️ </header>
         <div id="messages"></div>
         <div id="context-menu">
-            <div class="menu-item" id="reply-action">Reply (Պատասխանել)</div>
-            <div class="menu-item delete-item" id="delete-action">Delete (Ջնջել)</div>
+            <div class="menu-item" onclick="prepareReply()">Reply (Պատասխանել)</div>
+            <div class="menu-item" id="delBtn" style="color:red; border-top:1px solid #444;">Delete (Ջնջել բոլորի մոտ)</div>
         </div>
         <div class="input-area-container">
             <div id="reply-bar" class="reply-bar">
-                <div id="reply-info" style="font-size:12px; color:#aaa;"></div>
-                <div onclick="cancelReply()" style="cursor:pointer; color:red; font-weight:bold;">✕</div>
+                <div id="reply-info" style="font-size:12px; color:#aaa; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 80%;"></div>
+                <div onclick="cancelReply()" style="cursor:pointer; color:red; font-weight:bold; padding: 5px;">✕</div>
             </div>
             <div id="typing-box" class="typing"></div>
             <div class="input-bar">
-                <label style="cursor:pointer; font-size:22px;">📷<input type="file" id="imgInp" hidden accept="image/*" onchange="sendImg(this)"></label>
+                <button type="button" class="icon-btn" onclick="document.getElementById('imgInp').click()">📷</button>
+                <input type="file" id="imgInp" style="display:none" accept="image/*" onchange="sendImg(this)">
                 <input type="text" id="msgInp" placeholder="Գրիր նամակ..." autocomplete="off">
                 <button id="send-btn" onclick="send()">➤</button>
             </div>
         </div>
     </div>
+
     <script>
         const firebaseConfig = {
             apiKey: "AIzaSyBYHiH5sa7PLLqeHeHGB-p1hWU5TcY82Dw",
@@ -80,13 +94,13 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
         const room = "private_room_2026";
-        let user = "", replyData = null, pressTimer, tOut;
+        let user = "", replyData = null, pressTimer, activeMsgData = null;
 
         function enter() {
             user = document.getElementById('nameInput').value.trim();
             if(!user) return;
-            document.getElementById('login-screen').style.display='none';
-            document.getElementById('chat-screen').style.display='flex';
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('chat-screen').style.display = 'flex';
             init();
         }
 
@@ -107,7 +121,7 @@
                 cancelReply();
             };
             r.readAsDataURL(f);
-            inp.value = ""; 
+            inp.value = "";
         }
 
         function pushMsg(data) {
@@ -124,17 +138,17 @@
                 if(d.u !== user && !d.read) db.ref('chats/'+room+'/'+snap.key).update({read:true});
                 render(snap.key, d);
             });
-            db.ref('chats/'+room).on('child_removed', snap => document.querySelector(`[data-id="${snap.key}"]`)?.remove());
+            db.ref('chats/'+room).on('child_removed', snap => {
+                document.querySelector(`[data-id="${snap.key}"]`)?.remove();
+            });
             db.ref('chats/'+room).on('child_changed', snap => {
                 const d = snap.val();
                 const el = document.querySelector(`[data-id="${snap.key}"]`);
                 if(el) {
                     const rDiv = el.querySelector('.msg-reactions');
-                    if(rDiv) {
-                        const reactions = Object.values(d.reactions || {}).join(' ');
-                        rDiv.innerText = reactions;
-                        rDiv.style.display = reactions ? 'block' : 'none';
-                    }
+                    const reacts = Object.values(d.reactions || {}).join(' ');
+                    rDiv.innerText = reacts;
+                    rDiv.style.display = reacts ? 'block' : 'none';
                     if(d.u === user && d.read) {
                         const ra = el.querySelector('.read-area');
                         if(ra && !ra.innerHTML) ra.innerHTML = '<span class="read-status"></span>';
@@ -154,17 +168,17 @@
 
             const html = `
                 <div class="msg-row ${isMe?'my-msg':'other-msg'}" data-id="${id}">
-                    <div class="reaction-box">
-                        <span onclick="event.stopPropagation(); react('${id}', '❤️')">❤️</span>
-                        <span onclick="event.stopPropagation(); react('${id}', '😂')">😂</span>
-                        <span onclick="event.stopPropagation(); react('${id}', '💋')">💋</span>
-                        <span onclick="event.stopPropagation(); react('${id}', '🫂')">🫂</span>
-                        <span onclick="event.stopPropagation(); react('${id}', '👍')">👍</span>
+                    <div class="reaction-box" id="react-${id}">
+                        <span onclick="addReact('${id}', '❤️')">❤️</span>
+                        <span onclick="addReact('${id}', '😂')">😂</span>
+                        <span onclick="addReact('${id}', '💋')">💋</span>
+                        <span onclick="addReact('${id}', '🫂')">🫂</span>
+                        <span onclick="addReact('${id}', '👍')">👍</span>
                     </div>
                     <div class="avatar" style="background:${isMe?'#0084ff':'#555'}">${d.u[0]}</div>
                     <div class="bubble" 
-                         ontouchstart="startPress(event, '${id}', '${d.u}', '${d.content.replace(/'/g, "\\'")}')" 
-                         ontouchend="endPress()">
+                         ontouchstart="holdStart(event, '${id}', '${d.u}', '${d.content.replace(/'/g, "\\'")}')" 
+                         ontouchend="holdEnd()">
                         ${replyHTML}
                         ${d.type==='text' ? `<div>${d.content}</div>` : `<img src="${d.content}" style="max-width:100%; border-radius:10px; display:block;">`}
                         <div style="font-size:9px; opacity:0.5; margin-top:4px; display:flex; align-items:center; justify-content:flex-end;">
@@ -178,52 +192,51 @@
             m.scrollTop = m.scrollHeight;
         }
 
-        function react(id, emoji) {
+        function holdStart(e, id, u, c) {
+            activeMsgData = {id: id, u: u, c: c};
+            const touch = e.touches[0];
+            pressTimer = setTimeout(() => {
+                closeAll();
+                document.getElementById('react-'+id).style.display = 'flex';
+                const menu = document.getElementById('context-menu');
+                menu.style.display = 'block';
+                menu.style.left = touch.pageX + 'px';
+                menu.style.top = (touch.pageY - 70) + 'px';
+                
+                const delBtn = document.getElementById('delBtn');
+                if(u === user) {
+                    delBtn.style.display = 'block';
+                    delBtn.onclick = () => { if(confirm("Ջնջե՞լ բոլորի մոտ")) db.ref(`chats/${room}/${id}`).remove(); closeAll(); };
+                } else delBtn.style.display = 'none';
+            }, 600);
+        }
+
+        function holdEnd() { clearTimeout(pressTimer); }
+
+        function addReact(id, emoji) {
             db.ref(`chats/${room}/${id}/reactions/${user}`).set(emoji);
             closeAll();
         }
 
-        function showMenu(x, y, id, msgUser, content) {
+        function prepareReply() {
+            replyData = {u: activeMsgData.u, c: activeMsgData.c};
+            document.getElementById('reply-bar').style.display = 'flex';
+            document.getElementById('reply-info').innerText = `Պատասխան ${activeMsgData.u}-ին`;
             closeAll();
-            const menu = document.getElementById('context-menu');
-            menu.style.display = 'block';
-            menu.style.left = x + 'px';
-            menu.style.top = (y - 50) + 'px';
-
-            document.getElementById('reply-action').onclick = () => {
-                replyData = {u: msgUser, c: content};
-                document.getElementById('reply-bar').style.display = 'flex';
-                document.getElementById('reply-info').innerText = `Պատասխան ${msgUser}-ին`;
-                closeAll();
-                document.getElementById('msgInp').focus();
-            };
-
-            const delBtn = document.getElementById('delete-action');
-            if(msgUser === user) {
-                delBtn.style.display = 'block';
-                delBtn.onclick = () => { if(confirm("Ջնջե՞լ")) db.ref(`chats/${room}/${id}`).remove(); closeAll(); };
-            } else { delBtn.style.display = 'none'; }
+            document.getElementById('msgInp').focus();
         }
 
-        function startPress(e, id, u, c) {
-            const touch = e.touches[0];
-            const row = document.querySelector(`[data-id="${id}"]`);
-            pressTimer = setTimeout(() => {
-                row.querySelector('.reaction-box').style.display = 'flex';
-                showMenu(touch.pageX, touch.pageY, id, u, c);
-            }, 600);
-        }
-        function endPress() { clearTimeout(pressTimer); }
         function closeAll() {
             document.querySelectorAll('.reaction-box').forEach(b => b.style.display = 'none');
             document.getElementById('context-menu').style.display = 'none';
         }
 
-        window.onclick = (e) => { if(!e.target.closest('.bubble')) closeAll(); };
+        window.onclick = (e) => { if(!e.target.closest('.bubble') && !e.target.closest('.reaction-box')) closeAll(); };
+        
         document.getElementById('msgInp').oninput = () => {
             db.ref('typing/'+room).set({u:user, s:true});
-            clearTimeout(tOut);
-            tOut = setTimeout(() => db.ref('typing/'+room).set({s:false}), 2000);
+            clearTimeout(window.tOut);
+            window.tOut = setTimeout(() => db.ref('typing/'+room).set({s:false}), 2000);
         };
         document.getElementById('msgInp').onkeypress = (e) => { if(e.key === 'Enter') send(); };
     </script>
