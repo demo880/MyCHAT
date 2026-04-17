@@ -3,135 +3,75 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Մասնավոր Չատ</title>
+    <title>Private Chat v4 - All Features</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <style>
-        :root {
-            --primary-color: #0084ff;
-            --bg-color: #f0f2f5;
-            --my-msg-bg: #0084ff;
-            --other-msg-bg: #ffffff;
-        }
-
-        body, html { 
-            margin: 0; padding: 0; height: 100%; 
-            font-family: -apple-system, sans-serif;
-            background-color: var(--bg-color);
-            overflow: hidden;
-        }
-
+        :root { --primary: #0084ff; --bg: #f0f2f5; }
+        body, html { margin: 0; padding: 0; height: 100%; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: var(--bg); overflow: hidden; }
+        
         /* Մուտքի էկրան */
-        #login-screen {
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            height: 100%; padding: 20px; box-sizing: border-box;
-        }
-
-        .login-card {
-            background: white; padding: 30px; border-radius: 20px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 100%; max-width: 350px; text-align: center;
-        }
-
-        input[type="text"] {
-            width: 100%; padding: 12px; margin: 10px 0;
-            border: 1px solid #ddd; border-radius: 25px; outline: none; box-sizing: border-box;
-        }
-
-        .btn-main {
-            width: 100%; background: var(--primary-color); color: white;
-            border: none; padding: 12px; border-radius: 25px; cursor: pointer; font-weight: bold;
-        }
+        #login-screen { display: flex; align-items: center; justify-content: center; height: 100%; transition: 0.5s; }
+        .login-card { background: white; padding: 40px; border-radius: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); text-align: center; width: 320px; }
+        .login-card input { width: 100%; padding: 15px; border-radius: 30px; border: 1px solid #ddd; outline: none; margin-bottom: 20px; box-sizing: border-box; font-size: 16px; }
+        .login-card button { width: 100%; padding: 15px; border-radius: 30px; border: none; background: var(--primary); color: white; font-weight: bold; cursor: pointer; font-size: 16px; }
 
         /* Չատի էկրան */
         #chat-screen { display: none; flex-direction: column; height: 100vh; }
+        header { background: white; padding: 15px; text-align: center; font-weight: bold; border-bottom: 1px solid #ddd; font-size: 18px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        
+        #messages { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; scroll-behavior: smooth; }
 
-        header {
-            background: white; padding: 15px; text-align: center;
-            font-weight: bold; border-bottom: 1px solid #ddd; font-size: 18px; color: #333;
-        }
-
-        #messages {
-            flex: 1; overflow-y: auto; padding: 15px;
-            display: flex; flex-direction: column; gap: 12px;
-        }
-
-        /* Նամակների ոճը */
-        .msg-row { display: flex; align-items: flex-end; gap: 10px; }
+        /* Նամակի դիզայն */
+        .msg-row { display: flex; align-items: flex-end; gap: 10px; animation: slideUp 0.3s ease; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .my-msg { flex-direction: row-reverse; }
+        .avatar { width: 38px; height: 38px; border-radius: 50%; background: #eee; flex-shrink: 0; border: 1px solid #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        
+        .bubble { padding: 12px 16px; border-radius: 20px; font-size: 15px; max-width: 75%; position: relative; line-height: 1.4; box-shadow: 0 2px 5px rgba(0,0,0,0.05); word-wrap: break-word; }
+        .my-msg .bubble { background: var(--primary); color: white; border-bottom-right-radius: 4px; }
+        .other-msg .bubble { background: white; color: #333; border-bottom-left-radius: 4px; }
+        
+        .user-label { font-size: 11px; font-weight: bold; margin-bottom: 4px; opacity: 0.8; }
+        .msg-info { font-size: 10px; opacity: 0.7; margin-top: 5px; display: flex; align-items: center; justify-content: flex-end; gap: 5px; }
+        .my-msg .msg-info { color: #d1e9ff; }
+        
+        .read-status { width: 9px; height: 9px; background: #4CAF50; border-radius: 50%; display: inline-block; border: 1px solid white; }
+        .chat-img { max-width: 100%; border-radius: 12px; margin-top: 8px; cursor: pointer; }
 
-        .avatar {
-            width: 38px; height: 38px; border-radius: 50%;
-            background: #ccc; flex-shrink: 0; border: 1px solid #ddd; object-fit: cover;
-        }
+        .typing-area { height: 20px; font-size: 12px; color: #777; font-style: italic; padding: 0 20px; margin-bottom: 5px; }
 
-        .bubble {
-            padding: 10px 14px; border-radius: 18px; font-size: 15px;
-            line-height: 1.4; max-width: 75%; position: relative;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-        }
-
-        .my-msg .bubble {
-            background: var(--my-msg-bg); color: white;
-            border-bottom-right-radius: 4px;
-        }
-
-        .other-msg .bubble {
-            background: var(--other-msg-bg); color: #333;
-            border-bottom-left-radius: 4px;
-        }
-
-        .user-name { font-size: 11px; opacity: 0.7; margin-bottom: 4px; display: block; }
-
-        .chat-img {
-            max-width: 100%; border-radius: 10px; margin-top: 5px;
-            display: block; cursor: pointer;
-        }
-
-        /* Ներքևի դաշտը */
-        .input-bar {
-            background: white; padding: 10px; display: flex; align-items: center;
-            gap: 10px; border-top: 1px solid #ddd; padding-bottom: calc(10px + env(safe-area-inset-bottom));
-        }
-
-        #msgInput {
-            flex: 1; border: none; background: #f0f2f5; padding: 12px 18px;
-            border-radius: 25px; outline: none; font-size: 16px;
-        }
-
-        .icon-btn { cursor: pointer; font-size: 22px; color: var(--primary-color); }
-
-        #send-btn {
-            background: var(--primary-color); color: white; width: 42px; height: 42px;
-            border: none; border-radius: 50%; display: flex; align-items: center; justify-content: center;
-            font-size: 18px; cursor: pointer;
-        }
+        /* Ներքևի դաշտ */
+        .input-bar { background: white; padding: 12px 15px; display: flex; align-items: center; gap: 12px; border-top: 1px solid #eee; padding-bottom: calc(12px + env(safe-area-inset-bottom)); }
+        #msgInp { flex: 1; border: none; background: #f0f2f5; padding: 12px 20px; border-radius: 30px; outline: none; font-size: 16px; }
+        .icon-btn { cursor: pointer; font-size: 24px; transition: 0.2s; user-select: none; }
+        .icon-btn:hover { transform: scale(1.1); }
+        #send-btn { background: var(--primary); color: white; border: none; width: 45px; height: 45px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 20px; }
     </style>
 </head>
 <body>
 
     <div id="login-screen">
         <div class="login-card">
-            <h2 style="margin-top:0">Մուտք</h2>
+            <h2 style="color: var(--primary); margin-top: 0;">Մուտք</h2>
             <input type="text" id="nameInput" placeholder="Գրիր անունդ...">
-            <button class="btn-main" onclick="enterChat()">Սկսել</button>
+            <button onclick="enterChat()">Մտնել Չատ</button>
         </div>
     </div>
 
     <div id="chat-screen">
         <header>Մասնավոր Չատ</header>
         <div id="messages"></div>
-        
+        <div id="typing-box" class="typing-area"></div>
         <div class="input-bar">
-            <label class="icon-btn">
-                📷 <input type="file" id="imgInput" hidden accept="image/*" onchange="sendImage(this)">
-            </label>
-            <input type="text" id="msgInput" placeholder="Նամակ..." onkeypress="if(event.key==='Enter') sendText()">
+            <label class="icon-btn">📷<input type="file" id="imgInp" hidden accept="image/*" onchange="sendImage(this)"></label>
+            <input type="text" id="msgInp" placeholder="Նամակ կամ 😊..." autocomplete="off">
             <button id="send-btn" onclick="sendText()">➤</button>
         </div>
     </div>
 
     <script>
-        // Քո Firebase տվյալները
+        // Firebase Config
         const firebaseConfig = {
             apiKey: "AIzaSyBYHiH5sa7PLLqeHeHGB-p1hWU5TcY82Dw",
             authDomain: "mychat-160ff.firebaseapp.com",
@@ -139,86 +79,121 @@
             projectId: "mychat-160ff",
             storageBucket: "mychat-160ff.firebasestorage.app",
             messagingSenderId: "574166080101",
-            appId: "1:574166080101:web:504c6f77687cd01fb7048c",
-            measurementId: "G-GNFKZJ8G9S"
+            appId: "1:574166080101:web:504c6f77687cd01fb7048c"
         };
-
-        // Firebase-ի միացում
+        
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
-        const roomID = "secure_private_room_2026"; // Սա ձեր ընդհանուր սենյակն է
+        const room = "private_room_2026";
         let user = "";
+        let typingTimeout;
+
+        const msgInp = document.getElementById('msgInp');
 
         function enterChat() {
-            const input = document.getElementById('nameInput');
-            user = input.value.trim();
-            if (user) {
-                document.getElementById('login-screen').style.display = 'none';
-                document.getElementById('chat-screen').style.display = 'flex';
-                initChat();
-            }
+            user = document.getElementById('nameInput').value.trim();
+            if(!user) return;
+            document.getElementById('login-screen').style.display='none';
+            document.getElementById('chat-screen').style.display='flex';
+            initChat();
         }
 
+        // Typing status
+        msgInp.addEventListener('input', () => {
+            db.ref('typing/' + room).set({ user: user, isTyping: true });
+            clearTimeout(typingTimeout);
+            typingTimeout = setTimeout(() => {
+                db.ref('typing/' + room).set({ isTyping: false });
+            }, 2000);
+        });
+
+        msgInp.addEventListener('keypress', (e) => {
+            if(e.key === 'Enter') sendText();
+        });
+
         function sendText() {
-            const input = document.getElementById('msgInput');
-            const text = input.value.trim();
-            if (!text) return;
-            
-            db.ref('chats/' + roomID).push({
-                user: user,
-                type: 'text',
-                content: text,
-                timestamp: Date.now(),
-                avatar: `https://ui-avatars.com/api/?name=${user}&background=random`
-            });
-            input.value = "";
+            const val = msgInp.value.trim();
+            if(!val) return;
+            pushToFirebase({type:'text', content: val});
+            msgInp.value = "";
+            db.ref('typing/' + room).set({ isTyping: false });
         }
 
         function sendImage(input) {
             const file = input.files[0];
-            if (!file) return;
-            
+            if(!file) return;
             const reader = new FileReader();
-            reader.onload = function(e) {
-                db.ref('chats/' + roomID).push({
-                    user: user,
-                    type: 'image',
-                    content: e.target.result,
-                    timestamp: Date.now(),
-                    avatar: `https://ui-avatars.com/api/?name=${user}&background=random`
-                });
-            };
+            reader.onload = (e) => pushToFirebase({type:'image', content: e.target.result});
             reader.readAsDataURL(file);
         }
 
-        function initChat() {
-            const msgBox = document.getElementById('messages');
-            
-            // Լսել նոր նամակները
-            db.ref('chats/' + roomID).on('child_added', (snap) => {
-                const data = snap.val();
-                const isMe = data.user === user;
-                
-                const messageElement = document.createElement('div');
-                messageElement.className = `msg-row ${isMe ? 'my-msg' : 'other-msg'}`;
-                
-                const contentHTML = data.type === 'text' 
-                    ? `<div>${data.content}</div>` 
-                    : `<img src="${data.content}" class="chat-img" onclick="window.open(this.src)">`;
-
-                messageElement.innerHTML = `
-                    <img class="avatar" src="${data.avatar}">
-                    <div class="bubble">
-                        <span class="user-name">${data.user}</span>
-                        ${contentHTML}
-                    </div>
-                `;
-                
-                msgBox.appendChild(messageElement);
-                msgBox.scrollTop = msgBox.scrollHeight;
+        function pushToFirebase(data) {
+            const now = new Date();
+            const time = now.getHours() + ":" + (now.getMinutes()<10?'0':'') + now.getMinutes();
+            db.ref('chats/'+room).push({
+                user: user, 
+                type: data.type, 
+                content: data.content,
+                read: false, 
+                time: time, 
+                avatar: `https://ui-avatars.com/api/?name=${user}&background=random`
             });
+        }
+
+        function initChat() {
+            // Նոր նամակներ
+            db.ref('chats/'+room).on('child_added', (snap) => {
+                const d = snap.val();
+                if(d.user !== user && !d.read) {
+                    db.ref('chats/'+room+'/'+snap.key).update({read:true});
+                }
+                renderMessage(snap.key, d);
+            });
+
+            // Կարդալու ստատուս
+            db.ref('chats/'+room).on('child_changed', (snap) => {
+                const d = snap.val();
+                const el = document.querySelector(`[data-id="${snap.key}"] .read-area`);
+                if(el && d.read && d.user === user) {
+                    el.innerHTML = '<span class="read-status"></span>';
+                }
+            });
+
+            // Գրելու ինդիկատոր
+            db.ref('typing/' + room).on('value', (snap) => {
+                const d = snap.val();
+                const box = document.getElementById('typing-box');
+                if(d && d.isTyping && d.user !== user) {
+                    box.innerText = d.user + " գրում է...";
+                } else {
+                    box.innerText = "";
+                }
+            });
+        }
+
+        function renderMessage(id, d) {
+            const isMe = d.user === user;
+            const contentHTML = d.type === 'text' 
+                ? `<div>${d.content}</div>` 
+                : `<img src="${d.content}" class="chat-img" onclick="window.open(this.src)">`;
+
+            const html = `
+                <div class="msg-row ${isMe?'my-msg':'other-msg'}" data-id="${id}">
+                    <img class="avatar" src="${d.avatar}">
+                    <div class="bubble">
+                        <div class="user-label">${d.user}</div>
+                        ${contentHTML}
+                        <div class="msg-info">
+                            ${d.time} <span class="read-area">${isMe && d.read ? '<span class="read-status"></span>' : ''}</span>
+                        </div>
+                    </div>
+                </div>`;
+            const m = document.getElementById('messages');
+            m.insertAdjacentHTML('beforeend', html);
+            m.scrollTop = m.scrollHeight;
         }
     </script>
 </body>
-  </html>
-  
+</html>
+
+
