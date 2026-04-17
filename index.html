@@ -3,54 +3,83 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Private Chat v4</title>
+    <title>Noro ❤️ Gayush Chat</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <style>
-        :root { --primary: #0084ff; --bg: #f0f2f5; }
-        body, html { margin: 0; padding: 0; height: 100%; font-family: sans-serif; background: var(--bg); overflow: hidden; }
+        :root { --primary: #0084ff; --dark-bg: #0b0d0f; --card-bg: #1a1d21; --text: #e4e6eb; }
+        
+        body, html { 
+            margin: 0; padding: 0; height: 100%; 
+            font-family: -apple-system, sans-serif; 
+            background: var(--dark-bg); color: var(--text); overflow: hidden;
+        }
+
+        /* Login screen */
         #login-screen { display: flex; align-items: center; justify-content: center; height: 100%; }
-        .login-card { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); text-align: center; width: 300px; }
-        #chat-screen { display: none; flex-direction: column; height: 100vh; }
-        header { background: white; padding: 15px; text-align: center; font-weight: bold; border-bottom: 1px solid #ddd; }
-        #messages { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; }
-        .msg-row { display: flex; align-items: flex-end; gap: 8px; margin-bottom: 5px; }
+        .login-card { background: var(--card-bg); padding: 30px; border-radius: 20px; text-align: center; width: 300px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+        .login-card input { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #333; background: #2a2d31; color: white; margin-bottom: 15px; box-sizing: border-box; outline: none; }
+        .login-card button { width: 100%; padding: 12px; border-radius: 10px; border: none; background: var(--primary); color: white; font-weight: bold; cursor: pointer; }
+
+        /* Chat screen */
+        #chat-screen { display: none; flex-direction: column; height: 100vh; position: relative; }
+        header { background: var(--card-bg); padding: 15px; text-align: center; font-weight: bold; font-size: 18px; border-bottom: 1px solid #333; color: white; }
+
+        #messages { 
+            flex: 1; overflow-y: auto; padding: 15px; 
+            display: flex; flex-direction: column; gap: 12px;
+            padding-bottom: 90px; /* Space for input */
+        }
+
+        .msg-row { display: flex; align-items: flex-end; gap: 8px; }
         .my-msg { flex-direction: row-reverse; }
-        .avatar { width: 35px; height: 35px; border-radius: 50%; }
-        .bubble { padding: 10px 14px; border-radius: 18px; font-size: 15px; max-width: 70%; position: relative; word-wrap: break-word; }
+        .avatar { width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; color: white; font-size: 14px; }
+        
+        .bubble { padding: 10px 14px; border-radius: 18px; font-size: 15px; max-width: 75%; position: relative; word-wrap: break-word; }
         .my-msg .bubble { background: var(--primary); color: white; border-bottom-right-radius: 4px; }
-        .other-msg .bubble { background: white; color: #333; border-bottom-left-radius: 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
-        .msg-info { font-size: 10px; opacity: 0.7; margin-top: 4px; text-align: right; display: flex; align-items: center; justify-content: flex-end; gap: 3px; }
-        .read-status { width: 8px; height: 8px; background: #4CAF50; border-radius: 50%; display: inline-block; }
-        .typing { font-size: 12px; color: #888; padding: 5px 20px; height: 20px; font-style: italic; }
-        .input-bar { background: white; padding: 10px; display: flex; align-items: center; gap: 10px; border-top: 1px solid #ddd; padding-bottom: calc(10px + env(safe-area-inset-bottom)); }
-        #msgInp { flex: 1; border: none; background: #f0f2f5; padding: 12px; border-radius: 20px; outline: none; font-size: 16px; }
-        #send-btn { background: var(--primary); color: white; border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; font-size: 18px; }
+        .other-msg .bubble { background: #303338; color: white; border-bottom-left-radius: 4px; }
+
+        .msg-info { font-size: 9px; opacity: 0.6; margin-top: 4px; text-align: right; display: flex; align-items: center; justify-content: flex-end; gap: 3px; }
+        .read-status { width: 7px; height: 7px; background: #4CAF50; border-radius: 50%; display: inline-block; }
+
+        /* Input area */
+        .input-bar { 
+            background: var(--card-bg); padding: 10px; 
+            display: flex; align-items: center; gap: 10px; 
+            border-top: 1px solid #333;
+            position: fixed; bottom: 0; left: 0; right: 0;
+            padding-bottom: calc(10px + env(safe-area-inset-bottom));
+            z-index: 1000;
+        }
+
+        #msgInp { flex: 1; border: none; background: #2a2d31; padding: 12px 15px; border-radius: 20px; outline: none; color: white; font-size: 16px; }
+        #send-btn { background: var(--primary); color: white; border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+        
+        .typing { font-size: 11px; color: #888; position: absolute; bottom: 75px; left: 20px; font-style: italic; }
     </style>
 </head>
 <body>
 
     <div id="login-screen">
         <div class="login-card">
-            <h2 style="color:var(--primary)">Մուտք</h2>
-            <input type="text" id="nameInput" placeholder="Անունդ..." style="width:100%; padding:12px; border-radius:20px; border:1px solid #ddd; outline:none; margin-bottom:15px; box-sizing:border-box;">
-            <button onclick="enter()" style="width:100%; padding:12px; border-radius:20px; border:none; background:var(--primary); color:white; font-weight:bold; cursor:pointer;">Մտնել Չատ</button>
+            <h2>Մուտք</h2>
+            <input type="text" id="nameInput" placeholder="Անունդ..." autocomplete="off">
+            <button onclick="enter()">Մտնել Չատ</button>
         </div>
     </div>
 
     <div id="chat-screen">
-        <header>Մասնավոր Չատ</header>
+        <header>Noro ❤️ Gayush</header>
         <div id="messages"></div>
         <div id="typing-box" class="typing"></div>
         <div class="input-bar">
             <label style="cursor:pointer; font-size:22px;">📷<input type="file" id="imgInp" hidden accept="image/*" onchange="sendImg(this)"></label>
-            <input type="text" id="msgInp" placeholder="Նամակ կամ 😊..." autocomplete="off">
+            <input type="text" id="msgInp" placeholder="Գրիր նամակ կամ 😊..." autocomplete="off">
             <button id="send-btn" onclick="send()">➤</button>
         </div>
     </div>
 
     <script>
-        // Քո անհատական Firebase Config-ը
         const firebaseConfig = {
             apiKey: "AIzaSyBYHiH5sa7PLLqeHeHGB-p1hWU5TcY82Dw",
             authDomain: "mychat-160ff.firebaseapp.com",
@@ -81,9 +110,7 @@
             tOut = setTimeout(() => db.ref('typing/'+room).set({s:false}), 2000);
         });
 
-        document.getElementById('msgInp').addEventListener('keypress', (e) => {
-            if(e.key === 'Enter') send();
-        });
+        document.getElementById('msgInp').addEventListener('keypress', (e) => { if(e.key === 'Enter') send(); });
 
         function send() {
             const val = document.getElementById('msgInp').value.trim();
@@ -112,9 +139,7 @@
         function init() {
             db.ref('chats/'+room).on('child_added', (snap) => {
                 const d = snap.val();
-                if(d.u !== user && !d.read) {
-                    db.ref('chats/'+room+'/'+snap.key).update({read:true});
-                }
+                if(d.u !== user && !d.read) db.ref('chats/'+room+'/'+snap.key).update({read:true});
                 render(snap.key, d);
             });
 
@@ -132,12 +157,15 @@
 
         function render(id, d) {
             const isMe = d.u === user;
+            const color = isMe ? "#0084ff" : "#555";
+            const avatarUrl = d.av || `https://ui-avatars.com/api/?name=${d.u}&background=random`;
+            
             const html = `
                 <div class="msg-row ${isMe?'my-msg':'other-msg'}" data-id="${id}">
-                    <img class="avatar" src="${d.av}">
+                    <img class="avatar" src="${avatarUrl}" style="background:${color}">
                     <div class="bubble">
-                        <div style="font-size:10px; font-weight:bold; margin-bottom:3px;">${d.u}</div>
-                        ${d.type==='text' ? `<div>${d.content}</div>` : `<img src="${d.content}" style="max-width:100%; border-radius:10px;">`}
+                        <div style="font-size:10px; font-weight:bold; margin-bottom:3px; color:#aaa;">${d.u}</div>
+                        ${d.type==='text' ? `<div>${d.content}</div>` : `<img src="${d.content}" style="max-width:100%; border-radius:10px; margin-top:5px;">`}
                         <div class="msg-info">
                             ${d.time} <span class="read-area">${isMe && d.read ? '<span class="read-status"></span>' : ''}</span>
                         </div>
@@ -150,5 +178,3 @@
     </script>
 </body>
 </html>
-
-
