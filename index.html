@@ -107,7 +107,7 @@
                 cancelReply();
             };
             r.readAsDataURL(f);
-            inp.value = ""; // Սա թույլ է տալիս նույն նկարը նորից ընտրել
+            inp.value = ""; 
         }
 
         function pushMsg(data) {
@@ -151,15 +151,15 @@
             const isMe = d.u === user;
             let replyHTML = d.reply ? `<div class="reply-preview-in-msg"><b>${d.reply.u}:</b> ${d.reply.c.substring(0,15)}...</div>` : "";
             const reactions = Object.values(d.reactions || {}).join(' ');
-            
+
             const html = `
                 <div class="msg-row ${isMe?'my-msg':'other-msg'}" data-id="${id}">
                     <div class="reaction-box">
-                        <span onclick="react('${id}', '❤️')">❤️</span>
-                        <span onclick="react('${id}', '😂')">😂</span>
-                        <span onclick="react('${id}', '💋')">💋</span>
-                        <span onclick="react('${id}', '🫂')">🫂</span>
-                        <span onclick="react('${id}', '👍')">👍</span>
+                        <span onclick="event.stopPropagation(); react('${id}', '❤️')">❤️</span>
+                        <span onclick="event.stopPropagation(); react('${id}', '😂')">😂</span>
+                        <span onclick="event.stopPropagation(); react('${id}', '💋')">💋</span>
+                        <span onclick="event.stopPropagation(); react('${id}', '🫂')">🫂</span>
+                        <span onclick="event.stopPropagation(); react('${id}', '👍')">👍</span>
                     </div>
                     <div class="avatar" style="background:${isMe?'#0084ff':'#555'}">${d.u[0]}</div>
                     <div class="bubble" 
