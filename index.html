@@ -11,7 +11,7 @@
         body, html { margin: 0; padding: 0; height: 100%; font-family: -apple-system, sans-serif; background: var(--dark-bg); color: var(--text); overflow: hidden; }
         
         #login-screen { display: flex; align-items: center; justify-content: center; height: 100%; }
-        .login-card { background: var(--card-bg); padding: 30px; border-radius: 20px; text-align: center; width: 300px; }
+        .login-card { background: var(--card-bg); padding: 30px; border-radius: 20px; text-align: center; width: 300px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
         .login-card input { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #333; background: #2a2d31; color: white; margin-bottom: 15px; box-sizing: border-box; outline: none; }
         .login-card button { width: 100%; padding: 12px; border-radius: 10px; border: none; background: var(--primary); color: white; font-weight: bold; cursor: pointer; }
 
@@ -23,31 +23,30 @@
         .my-msg { flex-direction: row-reverse; }
         .avatar { width: 30px; height: 30px; border-radius: 50%; font-size: 10px; display: flex; align-items: center; justify-content: center; font-weight: bold; color: white; flex-shrink: 0; }
         
-        .bubble { padding: 10px 14px; border-radius: 18px; font-size: 15px; max-width: 75%; position: relative; word-wrap: break-word; cursor: pointer; }
+        .bubble { padding: 10px 14px; border-radius: 18px; font-size: 15px; max-width: 75%; position: relative; word-wrap: break-word; transition: transform 0.1s; }
         .my-msg .bubble { background: var(--primary); color: white; border-bottom-right-radius: 4px; }
         .other-msg .bubble { background: #303338; color: white; border-bottom-left-radius: 4px; }
 
-        /* Reply Styling */
         .reply-preview-in-msg { background: rgba(0,0,0,0.2); padding: 5px 8px; border-left: 3px solid #fff; border-radius: 4px; margin-bottom: 5px; font-size: 12px; opacity: 0.8; }
         .reply-bar { background: var(--card-bg); padding: 8px 15px; display: none; border-top: 1px solid #333; justify-content: space-between; align-items: center; }
 
-        /* Reactions Box */
         .reaction-box { display: none; position: absolute; top: -45px; background: #2a2d31; border-radius: 20px; padding: 5px 10px; gap: 8px; z-index: 3000; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
         .reaction-box span { cursor: pointer; font-size: 20px; transition: 0.1s; }
-        .reaction-box span:hover { transform: scale(1.3); }
+        .reaction-box span:active { transform: scale(1.4); }
         .msg-reactions { font-size: 13px; margin-top: 2px; }
 
-        .input-area-container { position: fixed; bottom: 0; left: 0; right: 0; background: var(--card-bg); z-index: 2000; border-top: 1px solid #333; }
+        .read-status { width: 7px; height: 7px; background: #4CAF50; border-radius: 50%; display: inline-block; margin-left: 4px; }
+
+        .input-area-container { position: fixed; bottom: 0; left: 0; right: 0; background: var(--card-bg); z-index: 2000; border-top: 1px solid #333; padding-bottom: env(safe-area-inset-bottom); }
         .typing { font-size: 11px; color: #888; padding: 5px 15px; font-style: italic; min-height: 15px; }
         .input-bar { display: flex; align-items: center; gap: 10px; padding: 10px; }
         
         #msgInp { flex: 1; border: none; background: #2a2d31; padding: 12px 15px; border-radius: 20px; outline: none; color: white; font-size: 16px; }
         #send-btn { background: var(--primary); color: white; border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; }
 
-        /* Context Menu */
-        #context-menu { display: none; position: fixed; background: #2a2d31; border-radius: 10px; padding: 5px 0; z-index: 4000; box-shadow: 0 0 20px rgba(0,0,0,0.8); }
-        .menu-item { padding: 10px 20px; color: white; cursor: pointer; font-size: 14px; }
-        .menu-item:hover { background: #3a3d42; }
+        #context-menu { display: none; position: fixed; background: #2a2d31; border-radius: 10px; padding: 5px 0; z-index: 4000; box-shadow: 0 0 20px rgba(0,0,0,0.8); min-width: 150px; }
+        .menu-item { padding: 12px 20px; color: white; cursor: pointer; font-size: 14px; }
+        .menu-item:active { background: #3a3d42; }
         .delete-item { color: #ff4444; border-top: 1px solid #444; }
     </style>
 </head>
@@ -63,20 +62,18 @@
     <div id="chat-screen">
         <header>Noro ❤️ Gayush</header>
         <div id="messages"></div>
-        
         <div id="context-menu">
             <div class="menu-item" id="reply-action">Reply (Պատասխանել)</div>
-            <div class="menu-item delete-item" id="delete-action">Delete (Ջնջել)</div>
+            <div class="menu-item delete-item" id="delete-action">Delete (Ջնջել բոլորի մոտ)</div>
         </div>
-
         <div class="input-area-container">
             <div id="reply-bar" class="reply-bar">
-                <div id="reply-info" style="font-size:12px; color:#aaa;"></div>
-                <div onclick="cancelReply()" style="cursor:pointer; color:red; font-weight:bold;">✕</div>
+                <div id="reply-info" style="font-size:12px; color:#aaa; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 80%;"></div>
+                <div onclick="cancelReply()" style="cursor:pointer; color:red; font-weight:bold; padding: 5px;">✕</div>
             </div>
             <div id="typing-box" class="typing"></div>
             <div class="input-bar">
-                <label style="cursor:pointer; font-size:22px;">📷<input type="file" id="imgInp" hidden accept="image/*" onchange="sendImg(this)"></label>
+                <label style="cursor:pointer; font-size:22px; padding: 5px;">📷<input type="file" id="imgInp" hidden accept="image/*" onchange="sendImg(this)"></label>
                 <input type="text" id="msgInp" placeholder="Գրիր նամակ..." autocomplete="off">
                 <button id="send-btn" onclick="send()">➤</button>
             </div>
@@ -99,6 +96,7 @@
         let user = "";
         let replyData = null;
         let pressTimer;
+        let tOut;
 
         function enter() {
             user = document.getElementById('nameInput').value.trim();
@@ -108,7 +106,6 @@
             init();
         }
 
-        // --- Core Functions ---
         function send() {
             const val = document.getElementById('msgInp').value.trim();
             if(!val) return;
@@ -124,12 +121,13 @@
             r.onload = (e) => pushMsg({t:'image', c:e.target.result, r: replyData});
             r.readAsDataURL(f);
             cancelReply();
+            inp.value = ""; 
         }
 
         function pushMsg(data) {
             const now = new Date();
             const time = now.getHours() + ":" + (now.getMinutes()<10?'0':'') + now.getMinutes();
-            db.ref('chats/'+room).push({ u: user, type: data.t, content: data.c, reply: data.r, time: time, reactions: {} });
+            db.ref('chats/'+room).push({ u: user, type: data.t, content: data.c, reply: data.r, time: time, reactions: {}, read: false });
         }
 
         function cancelReply() {
@@ -137,11 +135,10 @@
             document.getElementById('reply-bar').style.display = 'none';
         }
 
-        // --- Init & Render ---
         function init() {
             db.ref('chats/'+room).on('child_added', (snap) => {
                 const d = snap.val();
-                if(d.u !== user) db.ref('chats/'+room+'/'+snap.key).update({read:true});
+                if(d.u !== user && !d.read) db.ref('chats/'+room+'/'+snap.key).update({read:true});
                 render(snap.key, d);
             });
             db.ref('chats/'+room).on('child_removed', snap => document.querySelector(`[data-id="${snap.key}"]`)?.remove());
@@ -150,7 +147,11 @@
                 const el = document.querySelector(`[data-id="${snap.key}"]`);
                 if(el) {
                     const reactDiv = el.querySelector('.msg-reactions');
-                    reactDiv.innerText = Object.values(d.reactions || {}).join(' ');
+                    if(reactDiv) reactDiv.innerText = Object.values(d.reactions || {}).join(' ');
+                    if(d.u === user && d.read) {
+                        const readArea = el.querySelector('.read-area');
+                        if(readArea && !readArea.innerHTML) readArea.innerHTML = '<span class="read-status"></span>';
+                    }
                 }
             });
             db.ref('typing/'+room).on('value', s => {
@@ -171,24 +172,25 @@
                     <div class="reaction-box">
                         <span onclick="react('${id}', '❤️')">❤️</span>
                         <span onclick="react('${id}', '😂')">😂</span>
-                        <span onclick="react('${id}', '💋')">💋</span>
-                        <span onclick="react('${id}', '🫂')">🫂</span>
+                        <span onclick="react('${id}', '😮')">😮</span>
+                        <span onclick="react('${id}', '😢')">😢</span>
                         <span onclick="react('${id}', '👍')">👍</span>
                     </div>
                     <div class="avatar" style="background:${isMe?'#0084ff':'#555'}">${d.u[0]}</div>
                     <div class="bubble">
                         ${replyHTML}
-                        ${d.type==='text' ? `<div>${d.content}</div>` : `<img src="${d.content}" style="max-width:100%; border-radius:10px;">`}
-                        <div style="font-size:9px; opacity:0.5; margin-top:4px;">${d.time}</div>
+                        ${d.type==='text' ? `<div>${d.content}</div>` : `<img src="${d.content}" style="max-width:100%; border-radius:10px; display:block;">`}
+                        <div style="font-size:9px; opacity:0.5; margin-top:4px; display: flex; align-items: center; justify-content: flex-end;">
+                            ${d.time} <span class="read-area" style="margin-left:4px;">${isMe && d.read ? '<span class="read-status"></span>' : ''}</span>
+                        </div>
                         <div class="msg-reactions">${Object.values(d.reactions || {}).join(' ')}</div>
                     </div>
                 </div>`;
             const m = document.getElementById('messages');
             m.insertAdjacentHTML('beforeend', html);
-            m.lastElementChild.scrollIntoView({ behavior: 'smooth', block: 'end' });
+            m.scrollTop = m.scrollHeight;
         }
 
-        // --- Interaction Logic ---
         function react(id, emoji) {
             db.ref(`chats/${room}/${id}/reactions/${user}`).set(emoji);
             closeAll();
@@ -196,10 +198,13 @@
 
         function showMenu(e, id, msgUser, content) {
             e.preventDefault();
+            closeAll();
             const menu = document.getElementById('context-menu');
             menu.style.display = 'block';
-            menu.style.left = (e.pageX || e.touches[0].pageX) + 'px';
-            menu.style.top = (e.pageY || e.touches[0].pageY) + 'px';
+            let x = e.pageX || (e.touches ? e.touches[0].pageX : 0);
+            let y = e.pageY || (e.touches ? e.touches[0].pageY : 0);
+            menu.style.left = x + 'px';
+            menu.style.top = y + 'px';
 
             document.getElementById('reply-action').onclick = () => {
                 replyData = {u: msgUser, c: content};
@@ -218,7 +223,8 @@
 
         function startPress(e, id, u, c) {
             pressTimer = setTimeout(() => {
-                document.querySelector(`[data-id="${id}"] .reaction-box`).style.display = 'flex';
+                const row = document.querySelector(`[data-id="${id}"]`);
+                if(row) row.querySelector('.reaction-box').style.display = 'flex';
                 showMenu(e, id, u, c);
             }, 600);
         }
@@ -228,7 +234,8 @@
             document.getElementById('context-menu').style.display = 'none';
         }
 
-        window.onclick = () => closeAll();
+        window.onclick = (e) => { if(!e.target.closest('.bubble')) closeAll(); };
+        
         document.getElementById('msgInp').addEventListener('input', () => {
             db.ref('typing/'+room).set({u:user, s:true});
             clearTimeout(tOut);
