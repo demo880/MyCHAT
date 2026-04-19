@@ -26,6 +26,7 @@
             overflow: hidden;
             position: fixed;
             width: 100%;
+            overscroll-behavior: none;
         }
 
         /* Login Interface */
@@ -312,7 +313,7 @@
 
         <div id="context-menu">
             <div class="menu-item" onclick="prepareReply()">Reply (Պատասխանել)</div>
-            <div class="menu-item" id="delBtn" style="color:#ff4444; font-weight:bold;">Delete (Ջնջել բոլորի մոտ)</div>
+            <div class="menu-item" id="delBtn" style="color:#ff4444; font-weight:bold;">Delete (Ջնջել)</div>
         </div>
 
         <div class="input-area-container">
@@ -361,7 +362,6 @@
         let audioChunks = [];
 
         // --- Core Functions ---
-
         function enter() {
             user = document.getElementById('nameInput').value.trim();
             if(!user) return;
@@ -370,14 +370,21 @@
             updateMyStatus(true);
             trackPartnerStatus();
             init();
+            
+            // Firebase OnDisconnect setup
+            db.ref('.info/connected').on('value', function(snapshot) {
+                if (snapshot.val() === true && user) {
+                    updateMyStatus(true);
+                }
+            });
         }
 
+        // SCROLL FIX
         function scrollToBottom() {
             const m = document.getElementById('messages');
-            m.scrollTo({ top: m.scrollHeight, behavior: 'smooth' });
+            m.scrollTop = m.scrollHeight;
         }
 
-        // iPhone Visual Viewport Fix (Էջը բարձրացնել ստեղնաշարի հետ)
         if (window.visualViewport) {
             window.visualViewport.addEventListener('resize', () => {
                 const chatScreen = document.getElementById('chat-screen');
@@ -434,7 +441,6 @@
 
         function init() {
             cleanOldMessages();
-            // Load and Listen for messages (Limit to 20)
             db.ref('chats/'+room).limitToLast(20).on('child_added', (snap) => {
                 const d = snap.val();
                 if(d.u !== user && !d.read) db.ref('chats/'+room+'/'+snap.key).update({read:true});
@@ -508,20 +514,27 @@
             db.ref('chats/'+room).orderByChild('timestamp').endAt(oneDayAgo).once('value', (s) => s.forEach(c => c.ref.remove()));
         }
 
-        // --- iPhone Safari Voice Recording ---
+        // SAMSUNG & IPHONE VOICE FIX
         async function startRecording(e) {
             if (e) e.preventDefault();
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                let options = { mimeType: 'audio/webm' };
-                if (!MediaRecorder.isTypeSupported(options.mimeType)) options = { mimeType: 'audio/mp4' };
-                if (!MediaRecorder.isTypeSupported(options.mimeType)) options = { mimeType: 'audio/aac' };
+                let options = {};
+                
+                // Ստուգում ենք, թե որ ֆորմատն է աշխատում (Samsung=webm, iPhone=mp4/aac)
+                if (MediaRecorder.isTypeSupported('audio/webm')) {
+                    options = { mimeType: 'audio/webm' };
+                } else if (MediaRecorder.isTypeSupported('audio/mp4')) {
+                    options = { mimeType: 'audio/mp4' };
+                } else if (MediaRecorder.isTypeSupported('audio/aac')) {
+                    options = { mimeType: 'audio/aac' };
+                }
 
                 mediaRecorder = new MediaRecorder(stream, options);
                 audioChunks = [];
                 mediaRecorder.ondataavailable = (ev) => { if (ev.data.size > 0) audioChunks.push(ev.data); };
                 mediaRecorder.onstop = () => {
-                    const audioBlob = new Blob(audioChunks, { type: options.mimeType });
+                    const audioBlob = new Blob(audioChunks, { type: options.mimeType || 'audio/webm' });
                     const r = new FileReader();
                     r.onloadend = () => { pushMsg({t: 'voice', c: r.result, r: replyData}); scrollToBottom(); };
                     r.readAsDataURL(audioBlob);
@@ -529,7 +542,7 @@
                 };
                 mediaRecorder.start();
                 document.getElementById('typing-box').innerText = "🔴 Ձայնագրվում է...";
-            } catch (err) { alert("Միկրոֆոնը անջատված է։ Խնդրում ենք միացնել Safari-ի կարգավորումներից։"); }
+            } catch (err) { alert("Միկրոֆոնը անջատված է։ Խնդրում ենք միացնել բրաուզերի կարգավորումներից։"); }
         }
 
         function stopRecording(e) {
@@ -540,7 +553,6 @@
             }
         }
 
-        // --- Context Menu & Reactions Logic ---
         function holdStart(e, id, u, c) {
             activeMsgData = {id: id, u: u, c: c};
             const touch = e.touches[0];
@@ -580,21 +592,27 @@
 
         window.onclick = (e) => { if(!e.target.closest('.bubble') && !e.target.closest('.reaction-box')) closeAll(); };
 
-        // Typing indicator
         document.getElementById('msgInp').oninput = () => {
             db.ref('typing/'+room).set({u:user, s:true});
             clearTimeout(window.tOut);
             window.tOut = setTimeout(() => db.ref('typing/'+room).set({s:false}), 2000);
         };
-
         document.getElementById('msgInp').onkeypress = (e) => { if(e.key === 'Enter') send(); };
 
-        // Online Status System
+        // ONLINE / LAST SEEN FIX
         function updateMyStatus(isOnline) {
             if (!user) return;
             const now = new Date();
             const timeStr = now.getHours() + ":" + (now.getMinutes()<10?'0':'') + now.getMinutes();
-            db.ref('status/' + room + '/' + user).set({ online: isOnline, last_seen: timeStr });
+            const statusRef = db.ref('status/' + room + '/' + user);
+            
+            if (isOnline) {
+                statusRef.set({ online: true, last_seen: timeStr });
+                // Ասում ենք Firebase-ին, որ եթե ինտերնետը կտրվեց կամ բրաուզերը փակվեց, ավտոմատ դնի դուրս եկած
+                statusRef.onDisconnect().set({ online: false, last_seen: timeStr });
+            } else {
+                statusRef.set({ online: false, last_seen: timeStr });
+            }
         }
 
         function trackPartnerStatus() {
@@ -604,15 +622,29 @@
                 const statusEl = document.getElementById('status-info');
                 if (partnerName) {
                     const info = data[partnerName];
-                    if (info.online) { statusEl.innerText = "Online"; statusEl.style.color = "#4CAF50"; }
-                    else { statusEl.innerText = "Վերջին անգամ՝ " + info.last_seen; statusEl.style.color = "#888"; }
-                } else { statusEl.innerText = ""; }
+                    if (info.online) { 
+                        statusEl.innerText = "Online"; 
+                        statusEl.style.color = "#4CAF50"; 
+                    } else { 
+                        statusEl.innerText = "Վերջին անգամ՝ " + info.last_seen; 
+                        statusEl.style.color = "#888"; 
+                    }
+                } else { 
+                    statusEl.innerText = ""; 
+                }
             });
         }
 
+        // Հեռախոսի էկրանը անջատելու կամ ծրագրից դուրս գալու ճիշտ վերահսկում
+        document.addEventListener("visibilitychange", () => {
+            if (document.visibilityState === 'visible') {
+                updateMyStatus(true);
+            } else {
+                updateMyStatus(false);
+            }
+        });
+        
         window.onbeforeunload = () => updateMyStatus(false);
-        window.onblur = () => updateMyStatus(false);
-        window.onfocus = () => updateMyStatus(true);
     </script>
 </body>
 </html>
